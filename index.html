@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Aurora Charm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="UTF-8">
+</head>
+<body>
+     <div class="topnav">
+         <h1>Aurora Charm</h1>
+     </div>
+     <div class="content">
+        <div class="card-grid">
+            <div class="card">
+                <p>
+                    <button id="connectBleButton" class="connectButton"> Connect</button>
+                    <button id="disconnectBleButton" class="disconnectButton"> Disconnect</button>
+                </p>
+                <p class="gray-label">Status: <strong><span id="bleState" style="color:#d13a30;">Disconnected</span></strong></p>
+            </div>
+        </div>
+  
+		<div class="card-grid">
+            <div class="card">
+                 <h2>Program</h2>
+				 <p>
+                    <button id="rainbowButton" class="onButton">RAINBOW</button> 
+                    <button id="prideButton" class="onButton">PRIDE</button>
+					<button id="wavesButton" class="onButton">WAVES</button>
+					<button id="bubbleButton" class="onButton">BUBBLE</button>
+                    <button id="dotsButton" class="onButton">DOTS</button>
+                    <button id="fxWave2dButton" class="onButton">fxWAVE2D</button>
+                    <button id="radiiButton" class="onButton">RADII</button>
+                    <button id="cellsButton" class="onButton">CELLS</button>
+                    <button id="offButton" class="offButton">OFF</button>
+                 </p>
+                 <p class="gray-label">Current program: <span id="programValue"></span></p>
+            </div>
+ 
+            <div class="card">
+                
+                <h2>Modes</h2>
+                
+                    <h3>Radii Mode</h3>
+                        <p>
+                            <button id="octopusButton" class="onButton">OCTOPUS</button> 
+                            <button id="flowerButton" class="onButton">FLOWER</button>
+                            <button id="lotusButton" class="onButton">LOTUS</button>
+                            <button id="radialButton" class="onButton">RADIAL</button>
+                        </p>
+                        <p class="gray-label">Current mode: <span id="modeValue"></span></p>
+                
+                    <h3>Mapping</h3>
+                        <p>
+                            <form id="formMapping">
+                                Set mapping number: <input type="number"  type="submit" id="inputMapping"  name="inputMapping" min="11" max="19"/>
+                            </form>
+                        </p>	
+                        <p class="gray-label">Current mapping: <span id="valueMapping"></span></p>
+                    
+            </div>
+ 
+            <div class="card">
+                 <h2>Waves Color Palette</h2>
+				 <p>
+		            <button id="fixedPaletteButton" class="onButton">FIXED</button>             
+			        <button id="rotatePaletteButton" class="offButton">ROTATE</button>
+				 </p>
+				 <p>
+					<form id="PalNumForm">
+					 Set palette number: <input type="number"  type="submit" id="PalNumInput"  name="palNumInputName" min="0" max="32"/>
+			
+					</form>
+				 </p>	
+				 <p class="gray-label">Current palette: <span id="paletteValue"></span></p>
+            </div>
+
+            <div class="card">
+                 <h2>Brightness</h2>
+				 <p>
+					 <button id="brighterButton" class="onButton">BRIGHTER</button>
+					 <button id="dimmerButton" class="offButton">DIMMER</button>
+				 </p>
+                 <p class="gray-label">Current brightness: <span id="brightnessValue"></span></p>
+			</div>
+
+			<div class="card">
+                 <h2>Speed</h2>
+				 <p>
+					 <button id="fasterButton" class="onButton">FASTER</button>
+					 <button id="slowerButton" class="offButton">SLOWER</button>
+                 
+				 </p>
+				 <p class="gray-label">Current speed: <span id="speedValue"></span></p>
+			</div>
+
+            <div class="card">
+                 <h2>Control</h2>
+				 <p>
+					 <button id="fancyButton" class="onButton">FANCY</button>
+				 </p>
+                  <p class="gray-label">Last control value: <span id="controlValue"></span></p>
+			</div>
+
+	    </div>
+		
+		<p class="gray-label" ><i>Last value sent: <span id="valueSent"></span></i></p>
+				
+    </div>
+
+<script src="script.js"></script>
+</body>
+</html>
