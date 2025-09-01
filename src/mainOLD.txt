@@ -1,0 +1,596 @@
+// Basic framework *************************************************
+#include <Arduino.h>
+#include <FastLED.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLEUtils.h>
+#include <BLE2902.h>
+
+#define DATA_PIN_1 D0
+
+#define WIDTH 10
+#define HEIGHT 6
+#define NUM_LEDS  WIDTH * HEIGHT
+
+const uint16_t MIN_DIMENSION = MIN(WIDTH, HEIGHT);
+const uint16_t MAX_DIMENSION = MAX(WIDTH, HEIGHT);
+
+#include "matrixMap_6x10.h"
+#include <palettes.h>
+
+CRGB leds[NUM_LEDS];
+uint16_t ledNum;
+
+#include <FS.h>
+#include "LittleFS.h"
+#define FORMAT_LITTLEFS_IF_FAILED true 
+
+#include <Preferences.h>
+Preferences preferences;
+
+using namespace fl;
+
+/* ----------------------- NEW ---------------------------------------------------------------------------------------*/
+
+//bleControl variables ***********************************************************************
+//elements that must be set before #include "bleControl.h" 
+
+extern const TProgmemRGBGradientPaletteRef gGradientPalettes[]; 
+extern const uint8_t gGradientPaletteCount;
+uint8_t gCurrentPaletteNumber;
+uint8_t gTargetPaletteNumber;
+CRGBPalette16 gCurrentPalette;
+CRGBPalette16 gTargetPalette;
+
+uint8_t PROGRAM;
+uint8_t MODE;	
+uint8_t SPEED;
+uint8_t BRIGHTNESS;
+
+uint8_t mapping = 1;
+
+#include "bleControl.h"
+
+//#include "animartrix.hpp"
+//bool animartrixFirstRun = true;
+
+#include "bubble.hpp"
+#include "radii.hpp"
+#include "waves.hpp"
+#include "rainbow.hpp"
+
+// Misc global variables ********************************************************************
+
+uint8_t savedProgram;
+uint8_t savedSpeed;
+uint8_t savedBrightness;
+
+// MAPPINGS **********************************************************************************
+
+extern const uint16_t progTopDown[NUM_LEDS] PROGMEM;
+extern const uint16_t progBottomUp[NUM_LEDS] PROGMEM;
+extern const uint16_t serpTopDown[NUM_LEDS] PROGMEM;
+extern const uint16_t serpBottomUp[NUM_LEDS] PROGMEM;
+
+enum Mapping {
+	TopDownProgressive = 1,
+	TopDownSerpentine,
+	BottomUpProgressive,
+	BottomUpSerpentine
+}; 
+
+// General (non-FL::XYMap) mapping 
+	uint16_t myXY(uint8_t x, uint8_t y) {
+			if (x >= WIDTH || y >= HEIGHT) return 0;
+			uint16_t i = ( y * WIDTH ) + x;
+			switch(mapping){
+				case 1:	 ledNum = progTopDown[i]; break;
+				case 2:	 ledNum = progBottomUp[i]; break;
+				case 3:	 ledNum = serpTopDown[i]; break;
+				case 4:	 ledNum = serpBottomUp[i]; break;
+			}
+			return ledNum;
+	}
+
+// Used only for FL::XYMap purposes
+	/*
+	uint16_t myXYFunction(uint16_t x, uint16_t y, uint16_t width, uint16_t height) {
+			width = WIDTH;
+			height = HEIGHT;
+			if (x >= width || y >= height) return 0;
+			uint16_t i = ( y * width ) + x;
+
+			switch(mapping){
+				case 1:	 ledNum = progTopDown[i]; break;
+				case 2:	 ledNum = progBottomUp[i]; break;
+				case 3:	 ledNum = serpTopDown[i]; break;
+				case 4:	 ledNum = serpBottomUp[i]; break;
+			}
+			
+			return ledNum;
+	}*/
+
+	//uint16_t myXYFunction(uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+
+	//XYMap myXYmap = XYMap::constructWithUserFunction(WIDTH, HEIGHT, myXYFunction);
+	//XYMap myXYmap = XYMap::constructWithLookUpTable(WIDTH, HEIGHT, progBottomUp);
+	//XYMap xyRect = XYMap::constructRectangularGrid(WIDTH, HEIGHT);
+
+//******************************************************************************************************************************
+
+void setup() {
+		
+		preferences.begin("settings", true); // true == read only mode
+			savedProgram  = preferences.getUChar("program");
+			//savedMode  = preferences.getUChar("mode");
+			savedBrightness  = preferences.getUChar("brightness");
+			savedSpeed  = preferences.getUChar("speed");
+		preferences.end();	
+
+		//PROGRAM = 0;
+		MODE = 0;
+    //BRIGHTNESS = 50;
+		//SPEED = 5;
+		PROGRAM = savedProgram;
+		BRIGHTNESS = savedBrightness;
+		SPEED = savedSpeed;
+
+		FastLED.addLeds<WS2812B, DATA_PIN_1, GRB>(leds, NUM_LEDS)
+				.setCorrection(TypicalLEDStrip);
+		
+		FastLED.setBrightness(BRIGHTNESS);
+
+		FastLED.clear();
+		FastLED.show();
+
+		if (debug) {
+			Serial.begin(115200);
+			delay(500);
+			Serial.print("Initial program: ");
+			Serial.println(PROGRAM);
+			Serial.print("Initial brightness: ");
+			Serial.println(BRIGHTNESS);
+			Serial.print("Initial speed: ");
+			Serial.println(SPEED);
+		}
+
+		bleSetup();
+
+    if (!LittleFS.begin(true)) {
+        	Serial.println("LittleFS mount failed!");
+        	return;
+		}
+		Serial.println("LittleFS mounted successfully.");   
+
+}
+
+//*****************************************************************************************
+
+void updateSettings_program(uint8_t newProgram){
+ preferences.begin("settings",false);  // false == read write mode
+	 preferences.putUChar("program", newProgram);
+ preferences.end();
+ savedProgram = newProgram;
+ if (debug) {Serial.println("Program setting updated");}
+}
+
+//*****************************************************************************************
+
+void updateSettings_brightness(uint8_t newBrightness){
+ preferences.begin("settings",false);  // false == read write mode
+	 preferences.putUChar("brightness", newBrightness);
+ preferences.end();
+ savedBrightness = newBrightness;
+ if (debug) {Serial.println("Brightness setting updated");}
+}
+
+//*******************************************************************************************
+
+void updateSettings_speed(uint8_t newSpeed){
+ preferences.begin("settings",false);  // false == read write mode
+	 preferences.putUChar("speed", newSpeed);
+ preferences.end();
+ savedSpeed = newSpeed;
+ if (debug) {Serial.println("Speed setting updated");}
+}
+
+//**************************************************************************************************************************
+// ANIMARTRIX **************************************************************************************************************
+/*	
+#define FL_ANIMARTRIX_USES_FAST_MATH 1
+#define FIRST_ANIMATION CHASING_SPIRALS
+Animartrix myAnimartrix(myXYmap, FIRST_ANIMATION);
+FxEngine animartrixEngine(NUM_LEDS);
+
+void setColorOrder(int value) {
+    switch(value) {
+        case 0: value = RGB; break;
+        case 1: value = RBG; break;
+        case 2: value = GRB; break;
+        case 3: value = GBR; break;
+        case 4: value = BRG; break;
+        case 5: value = BGR; break;
+    }
+    myAnimartrix.setColorOrder(static_cast<EOrder>(value));
+}
+
+void runAnimartrix() { 
+	FastLED.setBrightness(cBright);
+	animartrixEngine.setSpeed(1);
+	
+	static auto lastColorOrder = -1;
+	if (cColOrd != lastColorOrder) {
+		setColorOrder(cColOrd);
+		lastColorOrder = cColOrd;
+	} 
+
+	static auto lastFxIndex = -1;
+	if (cFxIndex != lastFxIndex) {
+		lastFxIndex = cFxIndex;
+		myAnimartrix.fxSet(cFxIndex);
+	}
+
+	animartrixEngine.draw(millis(), leds);
+}
+*/
+//**************************************************************************************************************************
+//**************************************************************************************************************************
+
+void loop() {
+
+		EVERY_N_SECONDS(30) {
+			if ( BRIGHTNESS != savedBrightness ) updateSettings_brightness(BRIGHTNESS);
+			if ( SPEED != savedSpeed ) updateSettings_speed(SPEED);
+			if ( PROGRAM != savedProgram ) updateSettings_program(PROGRAM);
+		}
+ 
+		if (!displayOn){
+			FastLED.clear();
+		}
+		
+		else {
+			
+			switch(PROGRAM){
+
+				case 0:  
+					mapping = Mapping::TopDownProgressive;
+					if (!rainbow::rainbowInstance) {
+						rainbow::initRainbow(myXY);
+					}
+					rainbow::runRainbow();
+					//nscale8(leds,NUM_LEDS,BRIGHTNESS);
+					break; 
+
+				case 1:
+					// 1D; mapping not needed
+					if (!waves::wavesInstance) {
+						waves::initWaves();
+					}
+					waves::runWaves(); 
+					break;
+ 
+				case 2:  
+					mapping = Mapping::TopDownSerpentine;
+					if (!bubble::bubbleInstance) {
+						bubble::initBubble(myXY);
+					}
+					bubble::runBubble();
+					break;  
+
+				case 3:
+				  mapping = Mapping::TopDownProgressive;
+					if (!radii::radiiInstance) {
+						radii::initRadii(myXY);
+					}
+					radii::runRadii();
+					break;
+				
+				/*case 6:   
+					if (animartrixFirstRun) {
+						animartrixEngine.addFx(myAnimartrix);
+						animartrixFirstRun = false;
+					}
+					runAnimartrix();
+					break;
+        */
+
+			}
+		}
+				
+		FastLED.show();
+	
+		// upon BLE disconnect
+		if (!deviceConnected && wasConnected) {
+			if (debug) {Serial.println("Device disconnected.");}
+			delay(500); // give the bluetooth stack the chance to get things ready
+			pServer->startAdvertising();
+			if (debug) {Serial.println("Start advertising");}
+			wasConnected = false;
+		}
+
+} // loop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ----------------------- OLD --------------------------------------------------------------------------------------
+//bleControl variables **************************************
+
+uint8_t program = 1;
+uint8_t pattern;
+bool displayOn = true;
+bool runAurora = true;
+bool runWaves = false;
+bool rotateWaves = true; 
+
+extern const TProgmemRGBGradientPaletteRef gGradientPalettes[]; 
+extern const uint8_t gGradientPaletteCount;
+
+uint8_t gCurrentPaletteNumber;
+CRGBPalette16 gCurrentPalette;
+CRGBPalette16 gTargetPalette;
+
+uint8_t SPEED;
+float speedfactor;
+uint8_t BRIGHTNESS;
+const uint8_t brightnessInc = 15;
+bool brightnessChanged = false;
+
+#include "bleControl.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Misc global  ***********************************************************************
+
+uint8_t blendFract = 64;
+uint16_t hueIncMax = 1500;
+CRGB newcolor = CRGB::Black;
+
+uint8_t savedSpeed;
+uint8_t savedBrightness;
+
+const uint16_t brightnessCheckInterval = 200;
+const uint16_t shutdownCheckInterval = 200; 
+
+#define SECONDS_PER_PALETTE 20
+
+//*******************************************************************************************
+
+void setup() {
+
+ delay(1000);
+ 
+ preferences.begin("settings", true); // true == read only mode
+   savedBrightness  = preferences.getUChar("brightness");
+   savedSpeed  = preferences.getUChar("speed");
+ preferences.end();
+
+BRIGHTNESS = 50;
+//SPEED = 5;
+//BRIGHTNESS = savedBrightness;
+SPEED = savedSpeed;
+
+ FastLED.addLeds<WS2812B, DATA_PIN_1, GRB>(leds, NUM_LEDS)
+   .setCorrection(TypicalLEDStrip);
+  // .setDither(BRIGHTNESS < 255);
+
+ FastLED.setBrightness(BRIGHTNESS);
+
+ FastLED.clear();
+ FastLED.show();
+
+ Serial.begin(115200);
+ delay(500);
+ Serial.print("Initial brightness: ");
+ Serial.println(BRIGHTNESS);
+ Serial.print("Initial speed: ");
+ Serial.println(SPEED);
+
+ bleSetup();
+
+
+}
+
+//*******************************************************************************************
+
+void updateSettings_brightness(uint8_t newBrightness){
+ preferences.begin("settings",false);  // false == read write mode
+   preferences.putUChar("brightness", newBrightness);
+ preferences.end();
+ savedBrightness = newBrightness;
+ Serial.println("Brightness setting updated");
+}
+
+//*******************************************************************************************
+
+void updateSettings_speed(uint8_t newSpeed){
+ preferences.begin("settings",false);  // false == read write mode
+   preferences.putUChar("speed", newSpeed);
+ preferences.end();
+ savedSpeed = newSpeed;
+ Serial.println("Speed setting updated");
+}
+
+//*******************************************************************************************
+
+
+// AURORA / WAVES**************************************************************************
+// Matrix format: Serpentine
+
+void display(uint8_t pattern) {
+
+  static uint16_t sPseudotime = 0;
+  static uint16_t sLastMillis = 0;
+  static uint16_t sHue16 = 0;
+ 
+  uint8_t sat8 = beatsin88( 87, 240, 255); 
+  uint8_t brightdepth = beatsin88( 341, 96, 224);
+  uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 256), (40 * 256));
+  uint8_t msmultiplier = beatsin88(147, 23, 60); 
+ 
+  uint16_t hue16 = sHue16; 
+  uint16_t hueinc16 = beatsin88(113, 1, hueIncMax );    
+  uint16_t ms = millis();  
+  uint16_t deltams = ms - sLastMillis ;
+  sLastMillis  = ms;     
+  sPseudotime += deltams * msmultiplier*speedfactor;
+  sHue16 += deltams * beatsin88( 400, 5,9);
+  uint16_t brightnesstheta16 = sPseudotime;
+
+  for( uint16_t i = 0 ; i < NUM_LEDS; i++ ) {
+   hue16 += hueinc16;
+   uint8_t hue8 = hue16 / 256;
+
+   if (runWaves) {
+     uint16_t h16_128 = hue16 >> 7;
+     if( h16_128 & 0x100) {
+       hue8 = 255 - (h16_128 >> 1);
+     } else {
+       hue8 = h16_128 >> 1;
+     }
+   }
+
+   brightnesstheta16  += brightnessthetainc16;
+   uint16_t b16 = sin16( brightnesstheta16  ) + 32768;
+
+   uint16_t bri16 = (uint32_t)((uint32_t)b16 * (uint32_t)b16) / 65536;
+   uint8_t bri8 = (uint32_t)(((uint32_t)bri16) * brightdepth) / 65536;
+   bri8 += (255 - brightdepth);
+     
+   switch (pattern) {
+     case 1:
+       newcolor = CHSV( hue8, sat8, bri8);
+       blendFract = 64;
+       break;
+     case 2:
+       uint8_t index = hue8;
+       //index = triwave8( index);
+       index = scale8( index, 240);
+       newcolor = ColorFromPalette( gCurrentPalette, index, bri8);
+       blendFract = 128;
+       break;
+   }
+
+   uint16_t pixelnumber = i;
+   //pixelnumber = (NUM_LEDS-1) - pixelnumber;    // commenting this line reverses apparent direction of LED progression   
+   uint16_t ledNum = loc2indSerp[i];
+   nblend( leds[ledNum], newcolor, blendFract);
+   }
+
+}
+
+// RAINBOW MATRIX******************************************************************************
+// Matrix format: Progressive by rows
+
+void DrawOneFrame( uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
+{
+  uint8_t lineStartHue = startHue8;
+  for( uint8_t y = 0; y < HEIGHT; y++) {
+    lineStartHue += yHueDelta8;
+    uint8_t pixelHue = lineStartHue;      
+    for( uint8_t x = 0; x < WIDTH; x++) {
+      pixelHue += xHueDelta8;
+      leds[loc2indProgbyRow[y][x]] = CHSV(pixelHue, 255, 255); 
+    }
+  }
+}
+
+void rainbowMatrix () 
+{
+    uint32_t ms = millis();
+    int32_t yHueDelta32 = ((int32_t)cos16( ms * (27/1) ) * (350 / WIDTH));
+    int32_t xHueDelta32 = ((int32_t)cos16( ms * (39/1) ) * (310 / HEIGHT));
+    DrawOneFrame( ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+ }
+
+// CHAMELEON ******************************************************************************
+
+
+void loop() {
+
+ EVERY_N_SECONDS(30) {
+   if ( BRIGHTNESS != savedBrightness ) updateSettings_brightness(BRIGHTNESS);
+   if ( SPEED != savedSpeed ) updateSettings_speed(SPEED);
+ }
+
+ if (!displayOn){
+   FastLED.clear();
+   FastLED.show();
+ }
+ else {
+   
+   switch(program){
+
+     case 0:  
+       rainbowMatrix ();
+       nscale8(leds,NUM_LEDS,BRIGHTNESS);
+       break; 
+
+      case 1:
+         if (runAurora) { 
+           hueIncMax = 3000;
+           display(1); 
+         }
+   
+         if (runWaves) { 
+           hueIncMax = 1500;
+           if (rotateWaves) {
+             EVERY_N_SECONDS( SECONDS_PER_PALETTE ) {
+               gCurrentPaletteNumber = addmod8( gCurrentPaletteNumber, 1, gGradientPaletteCount);
+               gTargetPalette = gGradientPalettes[ gCurrentPaletteNumber ];
+               pPaletteCharacteristic->setValue(String(gCurrentPaletteNumber).c_str());
+               pPaletteCharacteristic->notify();
+               Serial.print("Color palette: ");
+               Serial.println(gCurrentPaletteNumber);
+             }
+           }
+           EVERY_N_MILLISECONDS(40) {
+               nblendPaletteTowardPalette( gCurrentPalette, gTargetPalette, 16); 
+           }
+           display(2); 
+         }
+         break;
+
+   }
+
+   FastLED.show();
+ }
+
+ // while connected
+ if (deviceConnected) {
+   if (brightnessChanged) { 
+     pBrightnessCharacteristic->notify();
+     brightnessChanged = false;
+   }
+ }
+
+ // upon disconnect
+ if (!deviceConnected && wasConnected) {
+   Serial.println("Device disconnected.");
+   delay(500); // give the bluetooth stack the chance to get things ready
+   pServer->startAdvertising();
+   Serial.println("Start advertising");
+   wasConnected = false;
+ }
+
+}
+*/
