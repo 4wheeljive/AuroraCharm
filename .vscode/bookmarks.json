@@ -7,6 +7,11 @@
 					"line": 677,
 					"column": 27,
 					"label": "PROGRAM AND MODE"
+				},
+				{
+					"line": 706,
+					"column": 51,
+					"label": "PARAMETER REGISTRY AND VISUALIZER SYSTEM"
 				}
 			]
 		},
@@ -14,7 +19,7 @@
 			"path": "src/bleControl.h",
 			"bookmarks": [
 				{
-					"line": 176,
+					"line": 216,
 					"column": 0,
 					"label": "EaseType getEaseType(uint8_t value) {"
 				}

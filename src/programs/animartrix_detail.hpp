@@ -692,7 +692,7 @@ class ANIMartRIX {
 
     //*******************************************************************************
 
-    void Waves() {
+    void Cool_Waves() {
 
         timings.master_speed = 0.01 * cSpeed; 
         
@@ -783,9 +783,6 @@ class ANIMartRIX {
                 animation.offset_x = move.linear[2];
                 show3 = { Layer3 ? render_value(animation) : 0};
 
-                //float radius = radial_filter_radius + cRadius;
-                //float radial_filter = (radius + cEdge - distance[x][y]) / ( radius + cEdge);
-
                 float radius = radial_filter_radius * cRadius;
                 radialFilterFalloff = cEdge;
                 radialDimmer = radialFilterFactor(radius, distance[x][y], radialFilterFalloff);
@@ -817,7 +814,7 @@ class ANIMartRIX {
 
         calculate_oscillators(timings);
 
-        float Twister = cAngle * move.directional[0] / 10;
+        float Twister = cAngle * move.directional[0] * cTwist / 10;
 
         for (int x = 0; x < num_x; x++) {
             for (int y = 0; y < num_y; y++) {
@@ -960,7 +957,7 @@ class ANIMartRIX {
 
     //*******************************************************************************
     
-    void EXPERIMENT_SM1() { 
+    void Experiment1() { 
 
         timings.master_speed = 0.02 * cSpeed;
 
@@ -1032,16 +1029,21 @@ class ANIMartRIX {
                 animation.offset_y = 150 * move.directional[5];
                 show5 = { Layer5 ? render_value(animation) : 0};
 
+                //show6 = screen(show1, show2);
+                //show7 = colordodge(show3, show4);
+                //show8 = multiply(show5, show7);
+                
                 pixel.red = (show1 + show2) * cRed;
                 pixel.green = (show3 + show4) * cGreen;
                 pixel.blue = show5 * cBlue;
 
+                //pixel.red = (show4/5 + show6) * cRed;
+                //pixel.green = (show5/5 + show7) * cGreen;
+                //pixel.blue = show8 * cBlue;
+
                 pixel = rgb_sanity_check(pixel);
-                //leds[xyMap(x, y)] = CRGB(pixel.red, pixel.green, pixel.blue);
                 setPixelColorInternal(x, y, pixel);
-                //setPixelColorInternal((num_x - 1) - x, y, pixel);
-                //setPixelColorInternal((num_x - 1) - x, (num_y - 1) - y, pixel);
-                //setPixelColorInternal(x, (num_y - 1) - y, pixel);
+
             }
         }
 
@@ -1049,7 +1051,7 @@ class ANIMartRIX {
 
     //*******************************************************************************
 
-    void Experiment10() {
+    void Experiment2() {
 
         timings.master_speed = 0.01 * cSpeed; 
 
@@ -1159,7 +1161,7 @@ class ANIMartRIX {
 
     //*******************************************************************************
 
-    void Test() {
+    void TestMode() {
         
         run_default_oscillators( 0.003);
         //timings.master_speed = 0.003;
@@ -1171,11 +1173,11 @@ class ANIMartRIX {
                 animation.dist = (distance[x][y] * distance[x][y]) * cZoom / 2;
                 animation.angle = polar_theta[x][y] * cAngle;
 
-                animation.scale_x = 0.005 * cScale;
+                animation.scale_x = 0.005 * cScale * cSpeedInt;
                 animation.scale_y = 0.005 * cScale;
 
                 animation.offset_y = -10 * move.linear[0];
-                animation.offset_x = 0;
+                animation.offset_x = cSpeedInt;
                 animation.offset_z = 0.1 * move.linear[0];
 
                 animation.z = 0;
@@ -1205,3 +1207,4 @@ class ANIMartRIX {
 FL_OPTIMIZATION_LEVEL_O3_END
 FL_FAST_MATH_END
 #endif
+

@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include "fl/sketch_macros.h"
+#include "fx/fx_engine.h"
 
 #include "driver/rtc_io.h"
 
@@ -60,10 +61,9 @@ bool mappingOverride = false;
 
 #include "rainbow.hpp"
 #include "waves.hpp"
-//#include "animartrix.hpp"
+#include "animartrix.hpp"
 #include "blur.hpp"
 #include "fade.hpp"
-
 //#include"_temp_.hpp
 
 // Misc global variables ********************************************************************
@@ -128,7 +128,46 @@ enum Mapping {
 	XYMap xyRect = XYMap::constructRectangularGrid(WIDTH, HEIGHT);
 
 //******************************************************************************************************************************
- 
+//**************************************************************************************************************************
+// ANIMARTRIX **************************************************************************************************************
+	
+#define FL_ANIMARTRIX_USES_FAST_MATH 1
+#define FIRST_ANIMATION CHASING_SPIRALS
+fl::Animartrix myAnimartrix(myXYmap, FIRST_ANIMATION);
+FxEngine animartrixEngine(NUM_LEDS);
+
+void setColorOrder(int value) {
+	switch(value) {
+		case 0: value = RGB; break;
+		case 1: value = RBG; break;
+		case 2: value = GRB; break;
+		case 3: value = GBR; break;
+		case 4: value = BRG; break;
+		case 5: value = BGR; break;
+	}
+	myAnimartrix.setColorOrder(static_cast<EOrder>(value));
+}
+
+void runAnimartrix() { 
+	FastLED.setBrightness(cBright);
+	animartrixEngine.setSpeed(1);
+	
+	static auto lastColorOrder = -1;
+	if (cColOrd != lastColorOrder) {
+		setColorOrder(cColOrd);
+		lastColorOrder = cColOrd;
+	} 
+
+	static auto lastFxIndex = savedMode;
+	if (cFxIndex != lastFxIndex) {
+		lastFxIndex = cFxIndex;
+		myAnimartrix.fxSet(cFxIndex);
+	}
+
+	animartrixEngine.draw(millis(), leds);
+}
+
+bool animartrixFirstRun = true;
 
 //******************************************************************************************************************************
 
@@ -282,15 +321,23 @@ void loop() {
 					}
 					waves::runWaves(); 
 					break;
- 
-				case 2:  
+
+				case 2:   
+					if (animartrixFirstRun) {
+						animartrixEngine.addFx(myAnimartrix);
+						animartrixFirstRun = false;
+					}
+					runAnimartrix();
+					break;
+
+				case 3:  
 					if (!blur::blurInstance) {
 						blur::initBlur(myXYmap, xyRect);
 					}
 					blur::runBlur();
 					break; 
 				
-				case 3:    
+				case 4:    
 					defaultMapping = Mapping::TopDownProgressive;
 					if (!fade::fadeInstance) {
 						//fade::initFade(myXYmap, xyRect);
