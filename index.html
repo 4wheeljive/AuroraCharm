@@ -165,7 +165,7 @@
                 <control-slider 
                     label="Brightness" 
                     parameter-id="inBright"
-                    min="5" 
+                    min="10" 
                     max="150" 
                     step="5" 
                     default-value="75"
@@ -681,19 +681,21 @@
         const Programs = {
             RAINBOW: 0,
             WAVES: 1,
-            BLUR: 2
+            BLUR: 2,
+            FADE: 3
+            // _TEMP_: 0
         };
 
         // Program display names (parallel to C++ PROGRAM_NAMES)
         const PROGRAM_NAMES = [
-            "RAINBOW", "WAVES", "BLUR"
+            "RAINBOW", "WAVES", "BLUR", "FADE"         // , "_TEMP"
         ];
 
         // Mode definitions (parallel to C++ mode arrays)
         const WAVES_MODES = ["PALETTE", "PRIDE"];
         
         // Mode count lookup (parallel to C++ MODE_COUNTS)
-        const MODE_COUNTS = [0, 2, 0];
+        const MODE_COUNTS = [0, 2, 0, 0];   // N(TEMP)
 
         
         // ******************************************************************************************************
@@ -724,7 +726,10 @@
             "rainbow": [],
             "waves-palette": ["speed", "hueIncMax", "blendFract", "brightTheta"],
             "waves-pride": ["speed", "hueIncMax", "blendFract", "brightTheta"],
-            "blur": []
+            "blur": [],
+            "fade": []
+            // , "_temp_": []
+
         };
 
         // Helper functions *********************************************

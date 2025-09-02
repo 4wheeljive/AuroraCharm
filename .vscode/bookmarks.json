@@ -1,0 +1,24 @@
+{
+	"files": [
+		{
+			"path": "index.html",
+			"bookmarks": [
+				{
+					"line": 677,
+					"column": 27,
+					"label": "PROGRAM AND MODE"
+				}
+			]
+		},
+		{
+			"path": "src/bleControl.h",
+			"bookmarks": [
+				{
+					"line": 176,
+					"column": 0,
+					"label": "EaseType getEaseType(uint8_t value) {"
+				}
+			]
+		}
+	]
+}

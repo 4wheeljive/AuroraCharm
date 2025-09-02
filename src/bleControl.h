@@ -37,11 +37,15 @@ using namespace fl;
   // Program names in PROGMEM
   const char rainbow_str[] PROGMEM = "rainbow";
   const char waves_str[] PROGMEM = "waves";
+  const char animartrix_str[] PROGMEM = "animartrix";
   const char blur_str[] PROGMEM = "blur";
+  const char fade_str[] PROGMEM = "_fade_";
+  //const char _temp__str[] PROGMEM = "_temp_";
 
-  
+ 
   const char* const PROGRAM_NAMES[] PROGMEM = {
-      rainbow_str, waves_str, blur_str 
+      rainbow_str, waves_str, animartrix_str, blur_str, fade_str 
+      // , _temp__str
   };
 
   // Mode names in PROGMEM
@@ -52,7 +56,7 @@ using namespace fl;
       palette_str, pride_str
    };
 
-  const uint8_t MODE_COUNTS[] = {0, 2, 0};
+  const uint8_t MODE_COUNTS[] = {0, 2, 0, 0}; // n_Temp_
 
    // Visualizer parameter mappings - PROGMEM arrays for memory efficiency
    // Individual parameter arrays for each visualizer
@@ -60,6 +64,8 @@ using namespace fl;
    const char* const WAVES_PALETTE_PARAMS[] PROGMEM = {"speed", "hueIncMax", "blendFract", "brightTheta"};
    const char* const WAVES_PRIDE_PARAMS[] PROGMEM = {"speed", "hueIncMax", "blendFract", "brightTheta"};
    const char* const BLUR_PARAMS[] PROGMEM = {};
+   const char* const FADE_PARAMS[] PROGMEM = {};
+   //const char* const _TEMP__PARAMS[] PROGMEM = {};
 
    
    // Struct to hold visualizer name and parameter array reference
@@ -75,7 +81,9 @@ using namespace fl;
       {"rainbow", RAINBOW_PARAMS, 0},
       {"waves-palette", WAVES_PALETTE_PARAMS, 4},
       {"waves-pride", WAVES_PRIDE_PARAMS, 4},
-      {"blur", BLUR_PARAMS, 0}
+      {"blur", BLUR_PARAMS, 0},
+      {"fade", FADE_PARAMS, 0}
+      //, {"_temp_", _TEMP__PARAMS, 0}
    };
 
   class VisualizerManager {
@@ -185,6 +193,10 @@ EaseType getEaseType(uint8_t value) {
 
 uint8_t cEaseSat = 0;
 uint8_t cEaseLum = 0;
+
+
+
+
 
 bool Layer1 = true;
 bool Layer2 = true;

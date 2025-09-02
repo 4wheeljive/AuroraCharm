@@ -28,6 +28,8 @@ const uint16_t MIN_DIMENSION = MIN(WIDTH, HEIGHT);
 const uint16_t MAX_DIMENSION = MAX(WIDTH, HEIGHT);
 
 CRGB leds[NUM_LEDS];
+CRGB leds2[NUM_LEDS];
+CRGB leds3[NUM_LEDS];
 uint16_t ledNum = 0;
 
 using namespace fl;
@@ -58,7 +60,11 @@ bool mappingOverride = false;
 
 #include "rainbow.hpp"
 #include "waves.hpp"
+//#include "animartrix.hpp"
 #include "blur.hpp"
+#include "fade.hpp"
+
+//#include"_temp_.hpp
 
 // Misc global variables ********************************************************************
 
@@ -283,10 +289,23 @@ void loop() {
 					}
 					blur::runBlur();
 					break; 
-
-				/*
+				
 				case 3:    
-					mapping = Mapping::TopDownProgressive;
+					defaultMapping = Mapping::TopDownProgressive;
+					if (!fade::fadeInstance) {
+						//fade::initFade(myXYmap, xyRect);
+						fade::initFade();
+					}
+					fade::runFade();
+					break;
+				
+				/*
+				case t:    
+					defaultMapping = Mapping::TopDownProgressive;
+					if (!_temp_::_temp_Instance) {
+						_temp_::init_Temp_(myXYmap, xyRect);
+					}
+					_temp_::run_Temp_();
 					break;
 				*/
 			}
