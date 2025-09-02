@@ -100,7 +100,13 @@ namespace waves {
 			EaseType ease_sat = getEaseType(cEaseSat);
         	EaseType ease_lum = getEaseType(cEaseLum);
 
-			ledNum = progLeftRight[i];
+			switch(cMapping) {
+				case 0:	 ledNum = progTopDown[i]; break;
+				case 1:	 ledNum = progBottomUp[i]; break;
+				case 2:	 ledNum = serpTopDown[i]; break;
+				case 3:	 ledNum = serpBottomUp[i]; break;
+				case 4:	 ledNum = progLeftRight[i]; break;
+			}
 				
 			nblend( leds[ledNum], newcolor, blendFract).colorBoost(ease_sat, ease_lum);
 

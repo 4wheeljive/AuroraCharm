@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
+#include "fl/sketch_macros.h"
 
 #include "driver/rtc_io.h"
 
@@ -46,12 +47,18 @@ uint8_t MODE;
 uint8_t SPEED;
 uint8_t BRIGHTNESS;
 
-uint8_t mapping = 1;
+//uint8_t mapping = 1;
+uint8_t defaultMapping = 0;
+//uint8_t overrideMapping = 0;
+//uint8_t cMapping = 0;
+bool mappingOverride = false;
 
 #include "bleControl.h"
+//#include "domainWarper.h"
 
 #include "rainbow.hpp"
 #include "waves.hpp"
+#include "blur.hpp"
 
 // Misc global variables ********************************************************************
 
@@ -69,7 +76,7 @@ extern const uint16_t serpBottomUp[NUM_LEDS] PROGMEM;
 extern const uint16_t progLeftRight[NUM_LEDS] PROGMEM;
 
 enum Mapping {
-	TopDownProgressive = 1,
+	TopDownProgressive = 0,
 	TopDownSerpentine,
 	BottomUpProgressive,
 	BottomUpSerpentine,
@@ -80,12 +87,12 @@ enum Mapping {
 	uint16_t myXY(uint8_t x, uint8_t y) {
 			if (x >= WIDTH || y >= HEIGHT) return 0;
 			uint16_t i = ( y * WIDTH ) + x;
-			switch(mapping){
-				case 1:	 ledNum = progTopDown[i]; break;
-				case 2:	 ledNum = progBottomUp[i]; break;
-				case 3:	 ledNum = serpTopDown[i]; break;
-				case 4:	 ledNum = serpBottomUp[i]; break;
-				case 5:	 ledNum = progLeftRight[i]; break;
+			switch(cMapping){
+				case 0:	 ledNum = progTopDown[i]; break;
+				case 1:	 ledNum = progBottomUp[i]; break;
+				case 2:	 ledNum = serpTopDown[i]; break;
+				case 3:	 ledNum = serpBottomUp[i]; break;
+				case 4:	 ledNum = progLeftRight[i]; break;
 			}
 			return ledNum;
 	}
@@ -121,7 +128,7 @@ enum Mapping {
 
 void setup() {
 		
-		pinMode(wakeupPin, INPUT);	
+		pinMode(wakeupPin, INPUT_PULLDOWN);	
 
 		preferences.begin("settings", true); // true == read only mode
 			savedBrightness  = preferences.getUChar("brightness");
@@ -130,14 +137,14 @@ void setup() {
 			savedMode  = preferences.getUChar("mode");
 		preferences.end();	
 
-		BRIGHTNESS = 50;
-		SPEED = 5;
-		PROGRAM = 1;
-		MODE = 0;
-		//BRIGHTNESS = savedBrightness;
-		//SPEED = savedSpeed;
-		//PROGRAM = savedProgram;
-		//MODE = savedMode;
+		//BRIGHTNESS = 50;
+		//SPEED = 5;
+		//PROGRAM = 1;
+		//MODE = 0;
+		BRIGHTNESS = savedBrightness;
+		SPEED = savedSpeed;
+		PROGRAM = savedProgram;
+		MODE = savedMode;
 
 		FastLED.addLeds<WS2812B, DATA_PIN_1, GRB>(leds, NUM_LEDS)
 				.setCorrection(TypicalLEDStrip);
@@ -160,6 +167,9 @@ void setup() {
 		}
 
 		bleSetup();
+
+		// Initialize domain warper
+		//DomainWarper::initGlobalWarpFilter(WIDTH, HEIGHT);
 
 		if (!LittleFS.begin(true)) {
         	Serial.println("LittleFS mount failed!");
@@ -228,7 +238,7 @@ void updateSettings_mode(uint8_t newMode){
 
 void loop() {
 
-		//EVERY_N_MILLISECONDS(shutdownCheckInterval) { shutdownCheck(); }
+		EVERY_N_MILLISECONDS(shutdownCheckInterval) { shutdownCheck(); }
 
 		EVERY_N_SECONDS(30) {
 			if ( BRIGHTNESS != savedBrightness ) updateSettings_brightness(BRIGHTNESS);
@@ -245,10 +255,12 @@ void loop() {
 			
 			//FastLED.setBrightness(BRIGHTNESS);
 
+			mappingOverride ? cMapping = cOverrideMapping : cMapping = defaultMapping;
+
 			switch(PROGRAM){
 
 				case 0:  
-					mapping = Mapping::TopDownProgressive;
+					defaultMapping = Mapping::TopDownProgressive;
 					if (!rainbow::rainbowInstance) {
 						rainbow::initRainbow(myXY);
 					}
@@ -257,23 +269,41 @@ void loop() {
 					break; 
 
 				case 1:
-					// 1D; mapping not needed
+					// 1D; mapping not needed, but can be utilized
+					defaultMapping = Mapping::TopDownProgressive;
 					if (!waves::wavesInstance) {
 						waves::initWaves();
 					}
 					waves::runWaves(); 
 					break;
  
-				/*case 2:  
-					mapping = Mapping::TopDownSerpentine;
-					break;  
+				case 2:  
+					if (!blur::blurInstance) {
+						blur::initBlur(myXYmap, xyRect);
+					}
+					blur::runBlur();
+					break; 
 
+				/*
 				case 3:    
 					mapping = Mapping::TopDownProgressive;
 					break;
 				*/
 			}
 		}
+
+		/*
+		// Apply domain warper filter if enabled
+		if (WarpEnabled && cWarpIntensity > 0.0f) {
+			DomainWarper::enableWarpFilter(true);
+			if (DomainWarper::globalWarpFilter) {
+				DomainWarper::globalWarpFilter->setSpeed(cWarpSpeed);
+				DomainWarper::globalWarpFilter->applyWarpFilter(leds, myXY, millis(), cWarpIntensity);
+			}
+		} else {
+			DomainWarper::enableWarpFilter(false);
+		}
+		*/
 				
 		FastLED.show();
 	

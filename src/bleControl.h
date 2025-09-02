@@ -2,6 +2,8 @@
 
 #include "FastLED.h"
 #include <ArduinoJson.h>
+#include "fl/ease.h"
+#include "fl/leds.h"
 
 #include <BLEDevice.h>
 #include <BLEServer.h>
@@ -22,6 +24,8 @@ uint8_t dummy = 1;
 extern uint8_t PROGRAM;
 extern uint8_t MODE;
 
+using namespace fl;
+
  // PROGRAM/MODE FRAMEWORK ****************************************
 
   enum Program : uint8_t {
@@ -33,9 +37,11 @@ extern uint8_t MODE;
   // Program names in PROGMEM
   const char rainbow_str[] PROGMEM = "rainbow";
   const char waves_str[] PROGMEM = "waves";
+  const char blur_str[] PROGMEM = "blur";
+
   
   const char* const PROGRAM_NAMES[] PROGMEM = {
-      rainbow_str, waves_str 
+      rainbow_str, waves_str, blur_str 
   };
 
   // Mode names in PROGMEM
@@ -46,13 +52,15 @@ extern uint8_t MODE;
       palette_str, pride_str
    };
 
-  const uint8_t MODE_COUNTS[] = {0, 2};
+  const uint8_t MODE_COUNTS[] = {0, 2, 0};
 
    // Visualizer parameter mappings - PROGMEM arrays for memory efficiency
    // Individual parameter arrays for each visualizer
    const char* const RAINBOW_PARAMS[] PROGMEM = {};
    const char* const WAVES_PALETTE_PARAMS[] PROGMEM = {"speed", "hueIncMax", "blendFract", "brightTheta"};
    const char* const WAVES_PRIDE_PARAMS[] PROGMEM = {"speed", "hueIncMax", "blendFract", "brightTheta"};
+   const char* const BLUR_PARAMS[] PROGMEM = {};
+
    
    // Struct to hold visualizer name and parameter array reference
    struct VisualizerParamEntry {
@@ -64,9 +72,10 @@ extern uint8_t MODE;
    // String-based lookup table - mirrors JavaScript VISUALIZER_PARAMS
    // Can number values be replace by an array element count?
    const VisualizerParamEntry VISUALIZER_PARAM_LOOKUP[] PROGMEM = {
-      {"rainbow", RAINBOW_PARAMS, 4},
+      {"rainbow", RAINBOW_PARAMS, 0},
       {"waves-palette", WAVES_PALETTE_PARAMS, 4},
-      {"waves-pride", WAVES_PRIDE_PARAMS, 4}
+      {"waves-pride", WAVES_PRIDE_PARAMS, 4},
+      {"blur", BLUR_PARAMS, 0}
    };
 
   class VisualizerManager {
@@ -125,7 +134,9 @@ using namespace ArduinoJson;
 
 bool rotateWaves = true; 
 uint8_t cBright = 75;
-uint8_t cColOrd = 0;                  
+uint8_t cColOrd = 0;
+uint8_t cMapping = 0;
+uint8_t cOverrideMapping = 0;
 
 float cSpeed = 1.f;
 float cZoom = 1.f;
@@ -150,6 +161,10 @@ uint8_t cSpeedInt = 1;
 float cHueIncMax = 300;
 uint8_t cBlendFract = 128;
 float cBrightTheta = 1;
+
+//Domain Warper
+//float cWarpIntensity = 0.0f;
+//float cWarpSpeed = 1.0f;
 
 EaseType getEaseType(uint8_t value) {
     switch (value) {
@@ -176,6 +191,7 @@ bool Layer2 = true;
 bool Layer3 = true;
 bool Layer4 = true;
 bool Layer5 = true;
+//bool warpEnabled = false;
 
 ArduinoJson::JsonDocument sendDoc;
 ArduinoJson::JsonDocument receivedJSON;
@@ -292,6 +308,7 @@ void sendReceiptString(String receivedID, String receivedValue) {
 // PARAMETER/PRESET MANAGEMENT SYSTEM ("PPMS")
 // X-Macro table 
 #define PARAMETER_TABLE \
+   X(uint8_t, OverrideMapping, 0) \
    X(uint8_t, ColOrd, 1.0f) \
    X(float, Speed, 1.0f) \
    X(float, Zoom, 1.0f) \
@@ -313,8 +330,7 @@ void sendReceiptString(String receivedID, String receivedValue) {
    X(uint8_t, BlendFract, 128) \
    X(float, BrightTheta, 1.0f) \
    X(uint8_t, EaseSat, 0) \
-   X(uint8_t, EaseLum, 0) 
-
+   X(uint8_t, EaseLum, 0) \
 
 
 // Auto-generated helper functions using X-macros
@@ -570,7 +586,7 @@ void processCheckbox(String receivedID, bool receivedValue ) {
    if (receivedID == "cxLayer3") {Layer3 = receivedValue;};
    if (receivedID == "cxLayer4") {Layer4 = receivedValue;};
    if (receivedID == "cxLayer5") {Layer5 = receivedValue;};
-
+   if (receivedID == "cx11") {mappingOverride = receivedValue;};
 }
 
 void processString(String receivedID, String receivedValue ) {
