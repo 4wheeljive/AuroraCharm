@@ -4,12 +4,12 @@
 			"path": "index.html",
 			"bookmarks": [
 				{
-					"line": 677,
+					"line": 678,
 					"column": 27,
 					"label": "PROGRAM AND MODE"
 				},
 				{
-					"line": 706,
+					"line": 708,
 					"column": 51,
 					"label": "PARAMETER REGISTRY AND VISUALIZER SYSTEM"
 				}
@@ -19,7 +19,7 @@
 			"path": "src/bleControl.h",
 			"bookmarks": [
 				{
-					"line": 216,
+					"line": 222,
 					"column": 0,
 					"label": "EaseType getEaseType(uint8_t value) {"
 				}

@@ -18,11 +18,11 @@ Preferences preferences;
 
 #define BUTTON_PIN_BITMASK 0x10 // On/off GPIO 4
 #define wakeupPin 4
-const uint16_t shutdownCheckInterval = 200; 
+const uint16_t shutdownCheckInterval = 500; 
 
-#include "matrixMap_6x10.h"
-#define WIDTH 10
-#define HEIGHT 6 
+#include "matrixMap_10x6_portrait.h"
+#define WIDTH 6
+#define HEIGHT 10 
 #define NUM_LEDS ( WIDTH * HEIGHT )
 
 const uint16_t MIN_DIMENSION = MIN(WIDTH, HEIGHT);
@@ -64,6 +64,7 @@ bool mappingOverride = false;
 #include "animartrix.hpp"
 #include "blur.hpp"
 #include "fade.hpp"
+#include "fire.hpp"
 //#include"_temp_.hpp
 
 // Misc global variables ********************************************************************
@@ -79,14 +80,17 @@ extern const uint16_t progTopDown[NUM_LEDS] PROGMEM;
 extern const uint16_t progBottomUp[NUM_LEDS] PROGMEM;
 extern const uint16_t serpTopDown[NUM_LEDS] PROGMEM;
 extern const uint16_t serpBottomUp[NUM_LEDS] PROGMEM;
-extern const uint16_t progLeftRight[NUM_LEDS] PROGMEM;
+extern const uint16_t vProgTopDown[NUM_LEDS] PROGMEM;
+extern const uint16_t vSerpTopDown[NUM_LEDS] PROGMEM;
+
 
 enum Mapping {
 	TopDownProgressive = 0,
 	TopDownSerpentine,
 	BottomUpProgressive,
 	BottomUpSerpentine,
-	LeftRightProgressive
+	VerticalTopDownProgressive,
+	VerticalTopDownSerpentine
 }; 
 
 // General (non-FL::XYMap) mapping 
@@ -98,7 +102,8 @@ enum Mapping {
 				case 1:	 ledNum = progBottomUp[i]; break;
 				case 2:	 ledNum = serpTopDown[i]; break;
 				case 3:	 ledNum = serpBottomUp[i]; break;
-				case 4:	 ledNum = progLeftRight[i]; break;
+				case 4:	 ledNum = vProgTopDown[i]; break;
+				case 5:	 ledNum = vSerpTopDown[i]; break;
 			}
 			return ledNum;
 	}
@@ -173,6 +178,8 @@ bool animartrixFirstRun = true;
 
 void setup() {
 		
+		//setCpuFrequencyMhz(80);  // Reduce from 240MHz to 80MHz
+
 		pinMode(wakeupPin, INPUT_PULLDOWN);	
 
 		preferences.begin("settings", true); // true == read only mode
@@ -310,7 +317,6 @@ void loop() {
 						rainbow::initRainbow(myXY);
 					}
 					rainbow::runRainbow();
-					//nscale8(leds,NUM_LEDS,BRIGHTNESS);
 					break; 
 
 				case 1:
@@ -346,6 +352,15 @@ void loop() {
 					fade::runFade();
 					break;
 				
+				case 5:    
+					defaultMapping = Mapping::TopDownProgressive;
+					if (!fire::fireInstance) {
+						fire::initFire(myXY);
+					}
+					fire::runFire();
+					break;
+				
+
 				/*
 				case t:    
 					defaultMapping = Mapping::TopDownProgressive;
@@ -371,7 +386,9 @@ void loop() {
 		}
 		*/
 				
-		FastLED.show();
+	  	if (displayOn) {
+   	   		FastLED.show();
+  		}
 	
 		// upon BLE disconnect
 		if (!deviceConnected && wasConnected) {

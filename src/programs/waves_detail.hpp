@@ -30,28 +30,34 @@ namespace waves {
 					Serial.println(gTargetPaletteNumber);
 				}
 			}
+		
+			EVERY_N_MILLISECONDS(40) {
+				if (gCurrentPalette != gTargetPalette) {
+					nblendPaletteTowardPalette( gCurrentPalette, gTargetPalette, 16); 
+				}
+			}
 		}
 		
-		EVERY_N_MILLISECONDS(40) {
+		/*EVERY_N_MILLISECONDS(40) {
 			nblendPaletteTowardPalette( gCurrentPalette, gTargetPalette, 16); 
-		}
+		}*/
 		
-		switch(MODE){
+		/*switch(MODE){
 			case 0: hueIncMax = 1500; break;
 			case 1: hueIncMax = 3000; break;
-		}
+		}*/
 
 		static uint16_t sPseudotime = 0;
 		static uint16_t sLastMillis = 0;
 		static uint16_t sHue16 = 0;
 	
 		uint8_t sat8 = beatsin88( 87, 230, 255); 
-		uint8_t brightdepth = beatsin88( 341, 96, 224);
-		uint16_t brightnessthetainc16 = beatsin88( 203, (25 * 256), (40 * 256));
-		uint8_t msmultiplier = beatsin88(147, 23, 60);
+		uint8_t brightdepth = beatsin88( 341, 96, 250); // beatsin88( 341, 96, 224)
+		uint16_t brightnessthetainc16 = beatsin88( 203*cBrightTheta, (25 * 256), (40 * 256));
+		uint8_t msmultiplier = beatsin88(147, 15, 45); // beatsin88(147, 23, 60)
 	
 		uint16_t hue16 = sHue16; 
-		uint16_t hueinc16 = beatsin88(113, 1, hueIncMax);
+		uint16_t hueinc16 = beatsin88(113, 1, cHueIncMax);
 		uint16_t ms = millis();  
 		uint16_t deltams = ms - sLastMillis ;
 		sLastMillis  = ms;     
@@ -86,32 +92,33 @@ namespace waves {
 					uint8_t index = hue8;
 					index = scale8( index, 240);
 					newcolor = ColorFromPalette( gCurrentPalette, index, bri8);
-					blendFract = 128;
+					//blendFract = 128;
 					break;
 				}
 				
 				case 1: {
 					newcolor = CHSV( hue8, sat8, bri8);
-					blendFract = 64;
+					//blendFract = 64;
 					break;
 				}
 			}
-
-			EaseType ease_sat = getEaseType(cEaseSat);
-        	EaseType ease_lum = getEaseType(cEaseLum);
 
 			switch(cMapping) {
 				case 0:	 ledNum = progTopDown[i]; break;
 				case 1:	 ledNum = progBottomUp[i]; break;
 				case 2:	 ledNum = serpTopDown[i]; break;
 				case 3:	 ledNum = serpBottomUp[i]; break;
-				case 4:	 ledNum = progLeftRight[i]; break;
+				case 4:	 ledNum = vProgTopDown[i]; break;
+				case 5:	 ledNum = vSerpTopDown[i]; break;
 			}
-				
-			nblend( leds[ledNum], newcolor, blendFract).colorBoost(ease_sat, ease_lum);
+
+			//EaseType ease_sat = getEaseType(cEaseSat);
+       		//EaseType ease_lum = getEaseType(cEaseLum);
+
+			nblend( leds[ledNum], newcolor, cBlendFract); // .colorBoost(ease_sat, ease_lum);
 
 		}
-	FastLED.delay(5);	
+	//FastLED.delay(5);	
 
 	} // runWaves()
 

@@ -34,6 +34,7 @@ using namespace fl;
       ANIMARTRIX = 2,
       BLUR = 3,
       FADE = 4,
+      FIRE = 5,
       PROGRAM_COUNT
   };
 
@@ -42,11 +43,13 @@ using namespace fl;
   const char waves_str[] PROGMEM = "waves";
   const char animartrix_str[] PROGMEM = "animartrix";
   const char blur_str[] PROGMEM = "blur";
-  const char fade_str[] PROGMEM = "_fade_";
+  const char fade_str[] PROGMEM = "fade";
+  const char fire_str[] PROGMEM = "fire";
+
   //const char _temp__str[] PROGMEM = "_temp_";
  
   const char* const PROGRAM_NAMES[] PROGMEM = {
-      rainbow_str, waves_str, animartrix_str, blur_str, fade_str 
+      rainbow_str, waves_str, animartrix_str, blur_str, fade_str, fire_str 
       // , _temp__str
   };
 
@@ -74,7 +77,7 @@ using namespace fl;
       testmode_str 
    };
 
-  const uint8_t MODE_COUNTS[] = {0, 2, 10, 0, 0}; // n_Temp_
+  const uint8_t MODE_COUNTS[] = {0, 2, 10, 0, 0, 0}; // n_Temp_
 
    // Visualizer parameter mappings - PROGMEM arrays for memory efficiency
    // Individual parameter arrays for each visualizer
@@ -93,6 +96,7 @@ using namespace fl;
    const char* const ANIMARTRIX_EXPERIMENT1_PARAMS[] PROGMEM = {"speed", "zoom", "scale", "angle", "z", "ratBase", "ratDiff"};
    const char* const ANIMARTRIX_EXPERIMENT2_PARAMS[] PROGMEM = {"speed", "zoom", "scale", "angle", "z", "ratBase", "ratDiff", "offBase", "offDiff"};
    const char* const ANIMARTRIX_TEST_PARAMS[] PROGMEM = {"zoom", "scale", "angle", "speedInt"};
+   const char* const FIRE_PARAMS[] PROGMEM = {};
    //const char* const _TEMP__PARAMS[] PROGMEM = {};
 
    
@@ -120,7 +124,9 @@ using namespace fl;
       {"animartrix-experiment2", ANIMARTRIX_EXPERIMENT2_PARAMS, 9},
       {"animartrix-test", ANIMARTRIX_TEST_PARAMS, 8},
       {"blur", BLUR_PARAMS, 0},
-      {"fade", FADE_PARAMS, 0}
+      {"fade", FADE_PARAMS, 0},
+      {"fire", FIRE_PARAMS, 0}
+
       //, {"_temp_", _TEMP__PARAMS, 0}
    };
 
@@ -206,7 +212,7 @@ float cBlue = 1.f;
 uint8_t cSpeedInt = 1;
 
 //Waves
-float cHueIncMax = 300;
+float cHueIncMax = 2500;
 uint8_t cBlendFract = 128;
 float cBrightTheta = 1;
 
@@ -233,10 +239,6 @@ EaseType getEaseType(uint8_t value) {
 
 uint8_t cEaseSat = 0;
 uint8_t cEaseLum = 0;
-
-
-
-
 
 bool Layer1 = true;
 bool Layer2 = true;
@@ -378,7 +380,7 @@ void sendReceiptString(String receivedID, String receivedValue) {
    X(float, Green, 1.0f) \
    X(float, Blue, 1.0f) \
    X(uint8_t, SpeedInt, 1) \
-   X(float, HueIncMax, 300.0f) \
+   X(float, HueIncMax, 2500.0f) \
    X(uint8_t, BlendFract, 128) \
    X(float, BrightTheta, 1.0f) \
    X(uint8_t, EaseSat, 0) \
@@ -822,7 +824,8 @@ void bleSetup() {
    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
    pAdvertising->addServiceUUID(SERVICE_UUID);
    pAdvertising->setScanResponse(false);
-   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+   pAdvertising->setMinPreferred(0x06);  // set value to 0x00 to not advertise this parameter
+   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, ESP_PWR_LVL_N12);  // Reduce TX power
    BLEDevice::startAdvertising();
    if (debug) {Serial.println("Waiting a client connection to notify...");}
 
