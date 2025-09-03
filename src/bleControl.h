@@ -16,7 +16,7 @@
 #define FORMAT_LITTLEFS_IF_FAILED true 
 
 bool displayOn = true;
-bool debug = true;
+bool debug = false;
 bool pauseAnimation = false;
 
 uint8_t dummy = 1;
@@ -187,7 +187,7 @@ using namespace ArduinoJson;
 
 bool rotateWaves = true; 
 uint8_t cFxIndex = 0;
-uint8_t cBright = 75;
+uint8_t cBright = 25;
 uint8_t cColOrd = 0;
 uint8_t cMapping = 0;
 uint8_t cOverrideMapping = 0;

@@ -178,8 +178,6 @@ bool animartrixFirstRun = true;
 
 void setup() {
 		
-		//setCpuFrequencyMhz(80);  // Reduce from 240MHz to 80MHz
-
 		pinMode(wakeupPin, INPUT_PULLDOWN);	
 
 		preferences.begin("settings", true); // true == read only mode
