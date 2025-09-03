@@ -685,13 +685,14 @@
             ANIMARTRIX: 2,
             BLUR: 3,
             FADE: 4,
-            FIRE: 5
+            FIRE: 5,
+            DOTS: 6
             // _TEMP_: 0
         };
 
         // Program display names (parallel to C++ PROGRAM_NAMES)
         const PROGRAM_NAMES = [
-            "RAINBOW", "WAVES", "ANIMARTRIX", "BLUR", "FADE", "FIRE"         // , "_TEMP"
+            "RAINBOW", "WAVES", "ANIMARTRIX", "BLUR", "FADE", "FIRE", "DOTS"         // , "_TEMP"
         ];
 
         // Mode definitions (parallel to C++ mode arrays)
@@ -702,7 +703,7 @@
         // const _TEMP__MODES = [ ]
         
         // Mode count lookup (parallel to C++ MODE_COUNTS)
-        const MODE_COUNTS = [0, 2, 10, 0, 0, 0];   // N(TEMP)
+        const MODE_COUNTS = [0, 2, 10, 0, 0, 0, 0];   // N(TEMP)
 
         
         // ******************************************************************************************************
@@ -730,6 +731,9 @@
             hueIncMax: {min: 50, max: 4000, default: 2500, step: 50},
             blendFract: {min: 1, max: 255, default: 128, step: 1},
             brightTheta: {min: 0.1, max: 5, default: 1, step: 0.1},
+
+            //Dots
+            tail: {min: 0.75, max: 1.2, default: 1, step: 0.01},
             
         };
 
@@ -751,7 +755,8 @@
             "test": ["speed"],
             "blur": [],
             "fade": [],
-            "fire": []
+            "fire": [],
+            "dots": ["speed", "tail"]
             // , "_temp_": []
         };
 

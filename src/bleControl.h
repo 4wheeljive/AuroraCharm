@@ -35,6 +35,7 @@ using namespace fl;
       BLUR = 3,
       FADE = 4,
       FIRE = 5,
+      DOTS = 6,
       PROGRAM_COUNT
   };
 
@@ -45,11 +46,13 @@ using namespace fl;
   const char blur_str[] PROGMEM = "blur";
   const char fade_str[] PROGMEM = "fade";
   const char fire_str[] PROGMEM = "fire";
+  const char dots_str[] PROGMEM = "dots";
 
   //const char _temp__str[] PROGMEM = "_temp_";
  
   const char* const PROGRAM_NAMES[] PROGMEM = {
-      rainbow_str, waves_str, animartrix_str, blur_str, fade_str, fire_str 
+      rainbow_str, waves_str, animartrix_str, blur_str, fade_str, 
+      fire_str, dots_str 
       // , _temp__str
   };
 
@@ -77,7 +80,7 @@ using namespace fl;
       testmode_str 
    };
 
-  const uint8_t MODE_COUNTS[] = {0, 2, 10, 0, 0, 0}; // n_Temp_
+  const uint8_t MODE_COUNTS[] = {0, 2, 10, 0, 0, 0, 0}; // n_Temp_
 
    // Visualizer parameter mappings - PROGMEM arrays for memory efficiency
    // Individual parameter arrays for each visualizer
@@ -97,6 +100,7 @@ using namespace fl;
    const char* const ANIMARTRIX_EXPERIMENT2_PARAMS[] PROGMEM = {"speed", "zoom", "scale", "angle", "z", "ratBase", "ratDiff", "offBase", "offDiff"};
    const char* const ANIMARTRIX_TEST_PARAMS[] PROGMEM = {"zoom", "scale", "angle", "speedInt"};
    const char* const FIRE_PARAMS[] PROGMEM = {};
+   const char* const DOTS_PARAMS[] PROGMEM = {};
    //const char* const _TEMP__PARAMS[] PROGMEM = {};
 
    
@@ -125,7 +129,8 @@ using namespace fl;
       {"animartrix-test", ANIMARTRIX_TEST_PARAMS, 8},
       {"blur", BLUR_PARAMS, 0},
       {"fade", FADE_PARAMS, 0},
-      {"fire", FIRE_PARAMS, 0}
+      {"fire", FIRE_PARAMS, 0},
+      {"fire", DOTS_PARAMS, 0}
 
       //, {"_temp_", _TEMP__PARAMS, 0}
    };
@@ -215,6 +220,9 @@ uint8_t cSpeedInt = 1;
 float cHueIncMax = 2500;
 uint8_t cBlendFract = 128;
 float cBrightTheta = 1;
+
+//Dots
+float cTail = 1.f;
 
 //Domain Warper
 //float cWarpIntensity = 0.0f;
@@ -383,6 +391,7 @@ void sendReceiptString(String receivedID, String receivedValue) {
    X(float, HueIncMax, 2500.0f) \
    X(uint8_t, BlendFract, 128) \
    X(float, BrightTheta, 1.0f) \
+   X(float, Tail, 1.0f) \
    X(uint8_t, EaseSat, 0) \
    X(uint8_t, EaseLum, 0) \
 

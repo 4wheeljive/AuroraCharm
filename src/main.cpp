@@ -65,6 +65,8 @@ bool mappingOverride = false;
 #include "blur.hpp"
 #include "fade.hpp"
 #include "fire.hpp"
+#include "dots.hpp"
+
 //#include"_temp_.hpp
 
 // Misc global variables ********************************************************************
@@ -357,7 +359,14 @@ void loop() {
 					}
 					fire::runFire();
 					break;
-				
+
+				case 6:    
+					defaultMapping = Mapping::TopDownProgressive;
+					if (!dots::dotsInstance) {
+						dots::initDots(myXY);
+					}
+					dots::runDots();
+					break;
 
 				/*
 				case t:    
