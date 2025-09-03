@@ -14,11 +14,11 @@
 #include <Preferences.h>  
 Preferences preferences;
 
-#define DATA_PIN_1 D2 // D8 for Charm; D0 for Pebble 
+#define DATA_PIN_1 D0 // D2 for Charm; D0 for Pebble 
 
 #define BUTTON_PIN_BITMASK 0x10 // On/off GPIO 4
 #define wakeupPin 4
-const uint16_t shutdownCheckInterval = 500; 
+//const uint16_t shutdownCheckInterval = 500; 
 
 #include "matrixMap_10x6_portrait.h"
 #define WIDTH 6
@@ -290,7 +290,7 @@ void updateSettings_mode(uint8_t newMode){
 
 void loop() {
 
-		EVERY_N_MILLISECONDS(shutdownCheckInterval) { shutdownCheck(); }
+		//EVERY_N_MILLISECONDS(shutdownCheckInterval) { shutdownCheck(); }
 
 		EVERY_N_SECONDS(30) {
 			if ( BRIGHTNESS != savedBrightness ) updateSettings_brightness(BRIGHTNESS);

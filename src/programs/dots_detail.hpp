@@ -14,9 +14,9 @@ namespace dots {
 		xyFunc = xy_func;  
 	}
 
-	byte osci[4]; 
-	byte pX[4];
-	byte pY[4];
+	float osci[4]; 
+	float pX[4];
+	float pY[4];
 
 	void PixelA(uint8_t x, uint8_t y, byte color) {
 		leds[xyFunc(x, y)] = CHSV(color, 255, 255);
@@ -27,15 +27,16 @@ namespace dots {
 	}
 
 	// set the speeds (and by that ratios) of the oscillators
-	// JSH add: set separate x and y oscillator arrays 
 	void MoveOscillators() {
-		osci[0] = osci[0] + 5;
-		osci[1] = osci[1] + 2;
-		osci[2] = osci[2] + 3;
-		osci[3] = osci[3] + 4;
+		osci[0] = osci[0] + 0.6f * cSpeed; 
+		osci[1] = osci[1] + 0.1f * cSpeed; 
+		osci[2] = osci[2] + 0.3f * cSpeed; 
+		osci[3] = osci[3] + 0.4f * cSpeed; 
 		for(int i = 0; i < 4; i++) { 
-			pX[i] = map(sin8(osci[i]),0,255,0,WIDTH-1);
-			pY[i] = map(sin8(osci[i]),0,255,0,HEIGHT-1);
+			//pX[i] = map(sin8((byte)osci[i]),0,255,0,WIDTH-1);
+			//pY[i] = map(sin8((byte)osci[i]),0,255,0,HEIGHT-1);
+			pX[i] = map(sin16((uint16_t)(osci[i] * 256)), -32768, 32767, 0, WIDTH-1);     
+  			pY[i] = map(sin16((uint16_t)(osci[i] * 256)), -32768, 32767, 0, HEIGHT-1);   
 		}
 	}
 
@@ -51,47 +52,6 @@ namespace dots {
 		for(uint8_t x = 0; x < WIDTH; x++) 
 			leds[xyFunc(x,0)].nscale8(scale);
 	}
-
-	/*
-	// create a square twister
-	// x and y for center, r for radius
-	void SpiralStream(int x, int y, int r, byte dim) {
-		for (int d = r; d >= 0; d--) { // from the outside to the inside
-			for (int i = x - d; i <= x + d; i++) {
-				leds[xyFunc(i, y - d)] +=
-					leds[xyFunc(i + 1, y - d)]; // lowest row to the right
-				leds[xyFunc(i, y - d)].nscale8(dim);
-			}
-			for (int i = y - d; i <= y + d; i++) {
-				leds[xyFunc(x + d, i)] += leds[xyFunc(x + d, i + 1)]; // right colum up
-				leds[xyFunc(x + d, i)].nscale8(dim);
-			}
-			for (int i = x + d; i >= x - d; i--) {
-				leds[xyFunc(i, y + d)] +=
-					leds[xyFunc(i - 1, y + d)]; // upper row to the left
-				leds[xyFunc(i, y + d)].nscale8(dim);
-			}
-			for (int i = y + d; i >= y - d; i--) {
-				leds[xyFunc(x - d, i)] += leds[xyFunc(x - d, i - 1)]; // left colum down
-				leds[xyFunc(x - d, i)].nscale8(dim);
-			}
-		}
-	}
- 
-
-	// give it a linear tail to the side
-	void HorizontalStream(byte scale) {
-		for (int x = 1; x < WIDTH; x++) {
-			for (int y = 0; y < HEIGHT; y++) {
-				leds[xyFunc(x, y)] += leds[xyFunc(x - 1, y)];
-				leds[xyFunc(x, y)].nscale8(scale);
-			}
-		}
-		for (int y = 0; y < HEIGHT; y++)
-			leds[xyFunc(0, y)].nscale8(scale);
-	}
-			*/
-
 
 	void runDots() {
 
@@ -109,9 +69,9 @@ namespace dots {
 			osci[3]
 		);
 		
-		VerticalStream(110 * cTail);
+		VerticalStream(60 * cTail);
 		//HorizontalStream(75);
-		FastLED.delay(5);
+		//FastLED.delay(5);
 	}
 
 } // namespace dots
